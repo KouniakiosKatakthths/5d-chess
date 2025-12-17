@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://dfh5xaucagget"]
+
+[ext_resource type="PackedScene" uid="uid://du2p70e87xphc" path="res://prefabs/chessboard.tscn" id="1_o5qli"]
+[ext_resource type="PackedScene" uid="uid://dkuxddbwfokam" path="res://prefabs/camera.tscn" id="2_0wfyh"]
+
+[node name="Main" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.37535873, -0.40544444, -0.8334991, 0.923346, 0.085119195, 0.37441537, -0.08085784, -0.9101481, 0.40631565, 0, 3.118094, 4.5472436)
+
+[node name="Camera" parent="." instance=ExtResource("2_0wfyh")]
+transform = Transform3D(-1, 6.6969726e-08, -5.6194278e-08, 0, 0.6427876, 0.7660444, 8.742278e-08, 0.7660444, -0.6427876, 0, 1.6, -1.4)
+
+[node name="Chessboard" parent="." instance=ExtResource("1_o5qli")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08893727, 0)

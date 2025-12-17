@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://dkuxddbwfokam"]
+
+[ext_resource type="Script" uid="uid://cjr1he0xl71v4" path="res://scripts/camera.gd" id="1_70n02"]
+[ext_resource type="Script" uid="uid://c1p3dytwtvilm" path="res://scripts/drag_drop.gd" id="2_6p8hw"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_u25ty"]
+size = Vector3(0.2, 0.2, 0.2)
+
+[node name="Camera" type="CharacterBody3D"]
+script = ExtResource("1_70n02")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+script = ExtResource("2_6p8hw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_u25ty")
