@@ -3,9 +3,6 @@ extends Node3D
 # Get the root of the pieces
 @onready var pieces_root: Node3D = $pieces_root
 
-# The title size
-@export var title_size := 0.29
-
 # The white pieces prefabs
 @export_group("White Pieces")
 @export var white_pawn: PackedScene
@@ -81,15 +78,15 @@ func game_from_fen(fen: String) -> void:
 			if piece == null:
 				push_error("Invalid FEN: Invalid piece character: \"", c ,"\" on row: ", y)
 			
-			_spawn(piece, Vector2i(x, y))
+			spawn(piece, Vector2i(x, y))
 			x += 1
 
 # Spawn a piece to the word
-func _spawn(scene: PackedScene, sq: Vector2i) -> void:
+func spawn(scene: PackedScene, sq: Vector2i) -> void:
 	var piece: Node3D = scene.instantiate()
 	pieces_root.add_child(piece)
 
-	var pos = square_to_world_center(sq)
+	var pos = BoardUtilities.square_to_world_center(sq)
 	piece.global_position = pos
 
 	board[sq.x][sq.y] = piece
@@ -98,14 +95,6 @@ func _spawn(scene: PackedScene, sq: Vector2i) -> void:
 func clear_pieces() -> void:
 	for child in pieces_root.get_children():
 		child.queue_free()
-
-# Converts from grid coords to word coords
-func square_to_world_center(sq: Vector2i) -> Vector3:
-	return Vector3(
-		pieces_root.position.x + sq.x * title_size,
-		pieces_root.position.y,
-		pieces_root.position.z + sq.y * title_size
-	)
 
 # Maps charaters to piece prefabs
 func fen_char_to_scene(ch: String) -> PackedScene:

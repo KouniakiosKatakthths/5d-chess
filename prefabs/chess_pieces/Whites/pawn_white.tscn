@@ -1,6 +1,7 @@
-[gd_scene load_steps=10 format=4 uid="uid://di8kvx2jqfhqc"]
+[gd_scene load_steps=11 format=4 uid="uid://di8kvx2jqfhqc"]
 
 [ext_resource type="Texture2D" uid="uid://40wtu8x8hqqn" path="res://models/textures/chess_set_pieces_white_diff_4k.jpg" id="1_grtea"]
+[ext_resource type="Script" uid="uid://da3bx50xp3dtk" path="res://scripts/piece.gd" id="1_mvj8f"]
 [ext_resource type="Texture2D" uid="uid://ctqpw66woyule" path="res://models/textures/chess_set_pieces_white_arm_4k.jpg" id="2_pmlp5"]
 [ext_resource type="Texture2D" uid="uid://blvntvbdww4wl" path="res://models/textures/chess_set_pieces_white_nor_gl_4k.jpg" id="3_wn7wk"]
 
@@ -59,6 +60,7 @@ albedo_color = Color(0.9661668, 0.51266617, 0.21650872, 1)
 material = SubResource("StandardMaterial3D_0wfyh")
 
 [node name="PawnWhite" type="Node3D"]
+script = ExtResource("1_mvj8f")
 
 [node name="piece_pawn_white_01" type="MeshInstance3D" parent="."]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
@@ -66,6 +68,7 @@ mesh = SubResource("ArrayMesh_mx6u4")
 skeleton = NodePath("")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="piece_pawn_white_01"]
+collision_layer = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="piece_pawn_white_01/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_cio4y")
@@ -73,4 +76,5 @@ shape = SubResource("ConcavePolygonShape3D_cio4y")
 [node name="debug_tile" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.144, 0, 0, 0, 0.144, 0, 0, 0, 0.144, 0, 0, 0)
 visible = false
+layers = 0
 mesh = SubResource("PlaneMesh_cio4y")

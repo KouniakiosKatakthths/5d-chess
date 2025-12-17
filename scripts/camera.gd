@@ -1,4 +1,3 @@
-class_name Board
 extends CharacterBody3D
 
 # Get the camera 
