@@ -1,10 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dfh5xaucagget"]
+[gd_scene load_steps=2 format=3 uid="uid://dfh5xaucagget"]
 
 [ext_resource type="PackedScene" uid="uid://5g2r6va5tia3" path="res://prefabs/board.tscn" id="1_o5qli"]
-[ext_resource type="Script" uid="uid://dykfnp2ud7256" path="res://scripts/board.gd" id="2_0wfyh"]
 
 [node name="Main" type="Node3D"]
 
 [node name="board" parent="." instance=ExtResource("1_o5qli")]
-script = ExtResource("2_0wfyh")
-game_fen = "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3"
+game_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
