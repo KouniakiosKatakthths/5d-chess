@@ -4,6 +4,11 @@ extends CharacterBody3D
 # Ref to chessboard to be passed down to the drag_drop
 @export var chessboard: ChessBoard;
 
+# Positions for the camera
+@export var white_point_path: Node3D
+@export var black_point_path: Node3D
+@export var switch_time := 0.50
+
 # Get the camera 
 @onready var camera: Camera3D = $Camera3D
 
@@ -21,8 +26,12 @@ var pitch_deg := 0.0
 # If we are in free camera state
 var free_camera := false;
 
+var tween: Tween
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	chessboard.turn_changed.connect(on_turn_changed)
+	
 	# Set initial pitch
 	pitch_deg = rad_to_deg(rotation.x)
 
@@ -82,3 +91,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		pitch_deg -= event.relative.y * mouse_sensitivity
 		pitch_deg = clamp(pitch_deg, min_pitch, max_pitch)
 		self.rotation_degrees.x = pitch_deg
+
+func on_turn_changed(side: Piece.PieceColor) -> void:
+	var target: Node3D = white_point_path if side == Piece.PieceColor.WHITE else black_point_path
+
+	if tween and tween.is_valid():
+		tween.kill()
+
+	var target_rot := Vector3(
+		deg_to_rad(-45),
+		deg_to_rad(180) if side == Piece.PieceColor.WHITE else 0.0,
+		0.0
+	)
+
+	tween = create_tween()
+	tween.tween_property(self, "global_transform", target.global_transform, switch_time)\
+		.set_trans(Tween.TRANS_SINE)\
+		.set_ease(Tween.EASE_IN_OUT)
+		
+	tween.tween_property(self, "rotation", target_rot, switch_time)\
+		.set_trans(Tween.TRANS_SINE)\
+		.set_ease(Tween.EASE_IN_OUT)

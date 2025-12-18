@@ -13,7 +13,7 @@ var game_state: State = State.new()
 var board := []
 
 # The FEN string for a classic game
-var default_game := "rkr/8/8/8/8/8/8/K"
+var default_game := "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
 ## Checks if the requested coords are inside the chessboard [br]
 ## [param sq]: The request coords [br]

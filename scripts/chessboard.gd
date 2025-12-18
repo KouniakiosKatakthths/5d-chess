@@ -4,6 +4,9 @@ extends Node3D
 # Get the root of the pieces
 @onready var pieces_root: Node3D = $pieces_root
 
+# When the sides change
+signal turn_changed(side_to_move: Piece.PieceColor)
+
 # The white pieces prefabs
 @export_group("White Pieces")
 @export var white_pawn: PackedScene
@@ -143,12 +146,20 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 		piece.has_moved = piece_moved_cache;
 		return false
 		
+	# Promotion
+	if piece.type == Piece.PieceType.PAWN:
+		var last_rank := 7 if piece.color == Piece.PieceColor.WHITE else 0
+		if move.to.y == last_rank:
+			promote_pawn(piece, move.to, selected.promotion_type)	
+	
 	var was_black := BoardState.game_state.side_to_move == Piece.PieceColor.BLACK
 	# Flip the board
 	BoardState.game_state.side_to_move = BoardState.opposite(BoardState.game_state.side_to_move)
 	
 	# Incrise the fullmove counter when the previus player was black
 	if was_black: BoardState.game_state.fullmove_number += 1
+	
+	emit_signal("turn_changed", BoardState.game_state.side_to_move)
 	
 	# Find the game result
 	var result := BoardState.evaluate_game_result()
@@ -261,3 +272,55 @@ func fen_char_to_scene(ch: String) -> PackedScene:
 		"Q": return white_queen
 		"K": return white_king
 		_:   return null
+
+## Get scene for a piece for the promotion
+## [param color]: The piece color
+## [parap t]: The requested type
+## Return: The screen of the new piece
+func scene_for_piece(color: Piece.PieceColor, t: Piece.PieceType) -> PackedScene:
+	if color == Piece.PieceColor.WHITE:
+		match t:
+			Piece.PieceType.QUEEN:  return white_queen
+			Piece.PieceType.ROOK:   return white_rook
+			Piece.PieceType.BISHOP: return white_bishop
+			Piece.PieceType.KNIGHT: return white_knight
+	else:
+		match t:
+			Piece.PieceType.QUEEN:  return black_queen
+			Piece.PieceType.ROOK:   return black_rook
+			Piece.PieceType.BISHOP: return black_bishop
+			Piece.PieceType.KNIGHT: return black_knight
+
+	return null
+
+## Promote a pawn to an other piece
+func promote_pawn(pawn: Piece, to_sq: Vector2i, promotion_type: Piece.PieceType) -> void:
+	# Only allow real promotion pieces
+	if promotion_type not in [
+		Piece.PieceType.QUEEN,
+		Piece.PieceType.ROOK,
+		Piece.PieceType.BISHOP,
+		Piece.PieceType.KNIGHT
+	]:
+		promotion_type = Piece.PieceType.QUEEN
+
+	var scene := scene_for_piece(pawn.color, promotion_type)
+	if scene == null:
+		promotion_type = Piece.PieceType.QUEEN
+		scene = scene_for_piece(pawn.color, promotion_type)
+
+	# Remove pawn node
+	pawn.queue_free()
+
+	# Spawn promoted piece node
+	var new_piece: Piece = scene.instantiate() as Piece
+	pieces_root.add_child(new_piece)
+
+	var pos := BoardState.square_to_world_center(to_sq)
+	pos.y = BoardState.pieces_origin.y
+	new_piece.global_position = pos
+
+	new_piece.has_moved = true
+
+	# Update board reference
+	BoardState.board[to_sq.x][to_sq.y] = new_piece
