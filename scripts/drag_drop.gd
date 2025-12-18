@@ -44,8 +44,14 @@ func pick_piece(mouse_pos: Vector2) -> void:
 	var piece_root: Node3D = hit.collider.owner
 	if piece_root == null: return
 	
-	start_sq = BoardState.world_to_square_center(piece_root.global_position)
+	var sq = BoardState.world_to_square_center(piece_root.global_position)
+	# Other's side turn -> dont pickup the piece
+	if BoardState.piece_at(sq).color != BoardState.game_state.side_to_move:
+		return
+	
+	start_sq = sq
 	start_pos = piece_root.global_position
+	
 	# Set the draggin piece
 	dragging = piece_root
 	

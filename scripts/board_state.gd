@@ -1,5 +1,7 @@
 extends Node
 
+enum GameResult { ONGOING, CHECKMATE, STALEMATE }
+
 # The title size
 var tile_size := 0.29
 # The origin of the chessboard in the A1 tile
@@ -11,7 +13,7 @@ var game_state: State = State.new()
 var board := []
 
 # The FEN string for a classic game
-var default_game := "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+var default_game := "rkr/8/8/8/8/8/8/K"
 
 ## Checks if the requested coords are inside the chessboard [br]
 ## [param sq]: The request coords [br]
@@ -86,3 +88,77 @@ func world_to_square_center(world: Vector3) -> Vector2i:
 ## Return: The opposite color of the [param c]
 func opposite(c: Piece.PieceColor) -> Piece.PieceColor:
 	return Piece.PieceColor.BLACK if c == Piece.PieceColor.WHITE else Piece.PieceColor.WHITE
+
+## Returns true if `color` has at least one legal move
+func has_any_legal_move(color: Piece.PieceColor) -> bool:
+	for x in range(8):
+		for y in range(8):
+			var p: Piece = BoardState.board[x][y]
+			if p == null or p.color != color:
+				continue
+
+			var from := Vector2i(x, y)
+			var moves := BoardLogic.textbook_moves(p, from)
+
+			for m in moves:
+				if is_legal_after_simulation(p, m):
+					return true
+
+	return false
+
+
+## Simulate a move on the board array only, and check king safety.
+func is_legal_after_simulation(piece: Piece, move: Move) -> bool:
+	# Save board + state
+	var state_cache: State = BoardState.game_state.clone()
+	var board_cache = BoardState.board.duplicate(true)
+	var moved_cache := piece.has_moved
+
+	var dir := 1 if piece.color == Piece.PieceColor.WHITE else -1
+
+	# Apply capture (handle en passant)
+	if move.is_en_passant:
+		var captured_sq := Vector2i(move.to.x, move.to.y - dir)
+		BoardState.board[captured_sq.x][captured_sq.y] = null
+	else:
+		# normal capture just gets overwritten by assignment below
+		pass
+
+	# Apply piece move on the array
+	BoardState.board[move.from.x][move.from.y] = null
+	BoardState.board[move.to.x][move.to.y] = piece
+	piece.has_moved = true
+
+	# Apply castling rook move on array (if needed)
+	if move.is_castle:
+		if move.to.x == 6:
+			var rook = BoardState.board[7][move.from.y]
+			BoardState.board[7][move.from.y] = null
+			BoardState.board[5][move.from.y] = rook
+		elif move.to.x == 2:
+			var rook2 = BoardState.board[0][move.from.y]
+			BoardState.board[0][move.from.y] = null
+			BoardState.board[3][move.from.y] = rook2
+
+	# Check king safety
+	var king_sq = BoardLogic.find_king_square(piece.color)
+	var illegal = BoardLogic.is_square_attacked(king_sq, BoardState.opposite(piece.color))
+
+	# Restore
+	BoardState.game_state = state_cache
+	BoardState.board = board_cache
+	piece.has_moved = moved_cache
+
+	return not illegal
+
+func evaluate_game_result() -> GameResult:
+	var side := BoardState.game_state.side_to_move # after you flip turns
+	var in_check := BoardLogic.is_in_check(side)
+	var has_move = has_any_legal_move(side)
+
+	if not has_move and in_check:
+		return GameResult.CHECKMATE
+	if not has_move and not in_check:
+		return GameResult.STALEMATE
+
+	return GameResult.ONGOING

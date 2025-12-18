@@ -90,10 +90,10 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	var piece := piece_node as Piece
 	if piece == null: return false
 	if BoardState.piece_at(move.from) != piece: return false
-	if BoardState.game_state.side_to_move != piece.color: return false
+	#if BoardState.game_state.side_to_move != piece.color: return false
 
 	# Save the current state
-	state_cache = BoardState.game_state.duplicate();
+	state_cache = BoardState.game_state.clone()
 	board_cache = BoardState.board.duplicate(true)
 
 	# Find the direction of the piece
@@ -148,7 +148,17 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	BoardState.game_state.side_to_move = BoardState.opposite(BoardState.game_state.side_to_move)
 	
 	# Incrise the fullmove counter when the previus player was black
-	if was_black: BoardState.fullmove_number += 1
+	if was_black: BoardState.game_state.fullmove_number += 1
+	
+	# Find the game result
+	var result := BoardState.evaluate_game_result()
+	match result:
+		BoardState.GameResult.CHECKMATE:
+			print("Checkmate! Winner:", BoardState.opposite(BoardState.game_state.side_to_move))
+		BoardState.GameResult.STALEMATE:
+			print("Stalemate! Draw.")
+		_: pass
+	
 	return true
 
 ## Check is the requested movement is valid
