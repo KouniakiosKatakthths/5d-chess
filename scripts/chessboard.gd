@@ -25,6 +25,13 @@ signal turn_changed(side_to_move: Piece.PieceColor)
 @export var black_queen: PackedScene
 @export var black_king: PackedScene
 
+@export_group("Highlights")
+@export var tile_highlight: PackedScene
+@export var tile_capture: PackedScene
+
+# An array that holds all of the highlights
+var highlights: Array
+
 # Temp variable for holding gamestate
 var state_cache: State;
 var board_cache: Array;
@@ -86,6 +93,12 @@ func spawn(scene: PackedScene, sq: Vector2i) -> void:
 	piece.global_position = pos
 
 	BoardState.board[sq.x][sq.y] = piece
+
+func clear_highlights() -> void:
+	for h in highlights:
+		if is_instance_valid(h):
+			h.queue_free()
+	highlights.clear()
 
 func try_move(piece_node: Node3D, move: Move) -> bool:
 	if not BoardState.in_bounds(move.from) or not BoardState.in_bounds(move.to): return false
@@ -171,6 +184,32 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 		_: pass
 	
 	return true
+
+func show_legal_move_highlights(piece: Piece, from: Vector2i) -> void:
+	clear_highlights()
+
+	# 1) get textbook moves
+	var moves := BoardLogic.textbook_moves(piece, from)
+
+	# 2) filter to only LEGAL moves (don’t leave king in check)
+	for m in moves:
+		if BoardState.is_legal_after_simulation(piece, m):
+			var is_capture := (not BoardState.is_empty(m.to)) or m.is_en_passant
+			spawn_highlight(m.to, is_capture)
+
+func spawn_highlight(sq: Vector2i, is_capture: bool) -> void:
+	var scene := tile_capture if (is_capture and tile_capture) else tile_highlight
+	if scene == null:
+		return
+
+	var h: Node3D = scene.instantiate()
+	add_child(h)
+
+	var pos := BoardState.square_to_world_center(sq)
+	pos.y = BoardState.pieces_origin.y + 0.01
+	h.global_position = pos
+
+	highlights.append(h)
 
 ## Check is the requested movement is valid
 ## [param piece]: The target piece

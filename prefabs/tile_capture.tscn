@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://bivixevvs0wmw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_udrot"]
+transparency = 1
+albedo_color = Color(0.6461281, 0.19386718, 0.07639188, 1)
+albedo_texture_force_srgb = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_qktdk"]
+material = SubResource("StandardMaterial3D_udrot")
+
+[node name="TileCapture" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.144, 0, 0, 0, 0.144, 0, 0, 0, 0.144, 0, 0, 0)
+mesh = SubResource("PlaneMesh_qktdk")

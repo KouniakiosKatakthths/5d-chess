@@ -49,6 +49,8 @@ func pick_piece(mouse_pos: Vector2) -> void:
 	if BoardState.piece_at(sq).color != BoardState.game_state.side_to_move:
 		return
 	
+	chessboard.show_legal_move_highlights(piece_root, sq)
+	
 	start_sq = sq
 	start_pos = piece_root.global_position
 	
@@ -76,6 +78,8 @@ func drag_move(mouse_pos: Vector2) -> void:
 func drop_piece(mouse_pos: Vector2) -> void:
 	# No dragging target
 	if dragging == null: return
+
+	chessboard.clear_highlights()
 
 	# Get the board point
 	var bp = board_point(mouse_pos)
@@ -132,5 +136,6 @@ func raycast(mouse_pos: Vector2, mask: int) -> Dictionary:
 
 # Revert piece back to original position
 func revert() -> void:
+	chessboard.clear_highlights()
 	dragging.global_position = start_pos
 	dragging = null

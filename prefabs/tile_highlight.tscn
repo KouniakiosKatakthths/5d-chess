@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cchpw4wk5edat"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2yw5g"]
+transparency = 1
+albedo_color = Color(0.3882353, 0, 0.94509804, 1)
+albedo_texture_force_srgb = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_bmx0d"]
+material = SubResource("StandardMaterial3D_2yw5g")
+
+[node name="TileHighlight" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.144, 0, 0, 0, 0.144, 0, 0, 0, 0.144, 0, 0, 0)
+mesh = SubResource("PlaneMesh_bmx0d")

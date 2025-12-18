@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://dfh5xaucagget"]
+[gd_scene load_steps=5 format=3 uid="uid://dfh5xaucagget"]
 
 [ext_resource type="PackedScene" uid="uid://du2p70e87xphc" path="res://prefabs/chessboard.tscn" id="1_o5qli"]
 [ext_resource type="PackedScene" uid="uid://dkuxddbwfokam" path="res://prefabs/camera.tscn" id="2_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://cchpw4wk5edat" path="res://prefabs/tile_highlight.tscn" id="3_sugp2"]
+[ext_resource type="PackedScene" uid="uid://bivixevvs0wmw" path="res://prefabs/tile_capture.tscn" id="4_jyhfs"]
 
 [node name="Main" type="Node3D"]
 
@@ -16,6 +18,8 @@ black_point_path = NodePath("../BlackCameraSize")
 
 [node name="Chessboard" parent="." instance=ExtResource("1_o5qli")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08893727, 0)
+tile_highlight = ExtResource("3_sugp2")
+tile_capture = ExtResource("4_jyhfs")
 
 [node name="WhiteCameraSide" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.4)

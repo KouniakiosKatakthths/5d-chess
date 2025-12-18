@@ -20,7 +20,15 @@ func _ready() -> void:
 			var moves: Array[Move] = [];
 			for d in [Vector2i(1,2),Vector2i(2,1),Vector2i(2,-1),Vector2i(1,-2),
 					  Vector2i(-1,-2),Vector2i(-2,-1),Vector2i(-2,1),Vector2i(-1,2)]:
-				slide_movement(piece, from, d, moves)
+				var sq = from + d
+				if not BoardState.in_bounds(sq):
+					continue
+					
+				if BoardState.is_empty(sq) or BoardState.is_enemy(piece, sq):
+					var m := Move.new()
+					m.from = from
+					m.to = sq
+					moves.append(m)
 			
 			return moves,
 		
