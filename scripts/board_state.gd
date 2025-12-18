@@ -90,6 +90,8 @@ func opposite(c: Piece.PieceColor) -> Piece.PieceColor:
 	return Piece.PieceColor.BLACK if c == Piece.PieceColor.WHITE else Piece.PieceColor.WHITE
 
 ## Returns true if `color` has at least one legal move
+## [param color]: The requested side
+## Returns true if the [param color] side has valid moves, false otherwise
 func has_any_legal_move(color: Piece.PieceColor) -> bool:
 	for x in range(8):
 		for y in range(8):
@@ -108,6 +110,9 @@ func has_any_legal_move(color: Piece.PieceColor) -> bool:
 
 
 ## Simulate a move on the board array only, and check king safety.
+## [param piece]: The simulated requedted piece
+## [param move]: The simulated movement
+## Returns true if the move is valid, false otherwise
 func is_legal_after_simulation(piece: Piece, move: Move) -> bool:
 	# Save board + state
 	var state_cache: State = BoardState.game_state.clone()

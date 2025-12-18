@@ -23,6 +23,8 @@ var pitch_deg := 0.0
 @export var min_pitch := -85.0
 @export var max_pitch := 85.0
 
+@export var free_cam_checkbox: CheckBox
+
 # If we are in free camera state
 var free_camera := false;
 
@@ -31,12 +33,21 @@ var tween: Tween
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	chessboard.turn_changed.connect(on_turn_changed)
+	free_cam_checkbox.pressed.connect(on_checkbox_pressed)
 	
 	# Set initial pitch
 	pitch_deg = rad_to_deg(rotation.x)
 
+func on_checkbox_pressed():
+	if not free_cam_checkbox.button_pressed:
+		on_turn_changed(BoardState.game_state.side_to_move)
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	if Input.is_action_just_released("toggle_freecam"):
+		free_cam_checkbox.button_pressed = not free_cam_checkbox.button_pressed
+		on_checkbox_pressed()
+	
 	# If not in free csmera state dont process movement
 	if not free_camera:
 		return;
@@ -76,6 +87,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Set the state of the free cam 
 		free_camera = event.pressed
 		
+		# Enable free camera
+		free_cam_checkbox.button_pressed = true;
+		
 		# Set the cursor depenting if the button is pressed or not
 		Input.set_mouse_mode(
 			Input.MOUSE_MODE_CAPTURED if free_camera 
@@ -93,6 +107,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		self.rotation_degrees.x = pitch_deg
 
 func on_turn_changed(side: Piece.PieceColor) -> void:
+	if free_cam_checkbox.button_pressed:
+		return 
+	
 	var target: Node3D = white_point_path if side == Piece.PieceColor.WHITE else black_point_path
 
 	if tween and tween.is_valid():
