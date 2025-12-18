@@ -1,5 +1,8 @@
 extends Camera3D
 
+#Reference to the classboard node
+var chessboard: ChessBoard
+
 # The collition layers been used
 const LAYER_BOARD := 1
 const LAYER_PIECE := 2
@@ -9,6 +12,11 @@ var dragging: Node3D = null
 
 # Starting position of the piece
 var start_pos := Vector3.ZERO
+var start_sq := Vector2i.ZERO
+
+func _ready() -> void:
+	# Get the chessboard reference
+	chessboard = (get_parent() as CameraScript).chessboard
 
 func _unhandled_input(event: InputEvent) -> void:
 	# If RMB freelook is held, don't drag pieces
@@ -32,11 +40,11 @@ func pick_piece(mouse_pos: Vector2) -> void:
 	
 	# Nothing hit
 	if hit.is_empty(): return
-	
-	# Get the piece root
-	var piece_root: Node3D = hit.collider.get_parent()
+		
+	var piece_root: Node3D = hit.collider.owner
 	if piece_root == null: return
 	
+	start_sq = BoardState.world_to_square_center(piece_root.global_position)
 	start_pos = piece_root.global_position
 	# Set the draggin piece
 	dragging = piece_root
@@ -56,7 +64,7 @@ func drag_move(mouse_pos: Vector2) -> void:
 		return
 
 	var target = bp
-	target.y = BoardUtilities.pieces_origin.y + 0.1
+	target.y = BoardState.pieces_origin.y + 0.1
 	dragging.global_position = target
 
 func drop_piece(mouse_pos: Vector2) -> void:
@@ -68,15 +76,24 @@ func drop_piece(mouse_pos: Vector2) -> void:
 	if bp == null: return
 	
 	# Get the tile from board point
-	var to_sq := BoardUtilities.world_to_square_center(bp)
+	var to_sq := BoardState.world_to_square_center(bp)
 	# Out of board? revert
 	if to_sq.x < 0 or to_sq.x > 7 or to_sq.y < 0 or to_sq.y > 7: 
 		revert()
 		return
 	
 	# Conevrt back to global that are centered around a tile
-	var grid_coord := BoardUtilities.square_to_world_center(to_sq)
-	grid_coord.y = BoardUtilities.pieces_origin.y		# Set original elevation
+	var grid_coord := BoardState.square_to_world_center(to_sq)
+	
+	var move := Move.new()
+	move.from = start_sq
+	move.to = to_sq
+	
+	if not chessboard.try_move(dragging, move):
+		revert()
+		return
+	
+	grid_coord.y = BoardState.pieces_origin.y		# Set original elevation
 	dragging.global_position = grid_coord
 	
 	# No dragging object

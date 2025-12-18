@@ -1,3 +1,4 @@
+class_name ChessBoard
 extends Node3D
 
 # Get the root of the pieces
@@ -21,28 +22,13 @@ extends Node3D
 @export var black_queen: PackedScene
 @export var black_king: PackedScene
 
-# The board state stored in memory
-var board := []
-
-# The FEN string for a classic game
-var default_game := "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr"
-
 func _ready() -> void:
-	game_from_fen(default_game)
-
-# Init the board with null values everywhere 
-func init_board_array() -> void:
-	board.resize(8)
-	for x in range(8):
-		board[x] = []
-		board[x].resize(8)
-		for y in range(8):
-			board[x][y] = null
+	game_from_fen(BoardState.default_game)
 
 # Parses a FEN string to create a game
 func game_from_fen(fen: String) -> void:
 	clear_pieces()
-	init_board_array()
+	BoardState.init_board_array()
 
 	# Get only the piece locations from the FEN string
 	var pieces_positions := fen.strip_edges().split(" ")[0]
@@ -86,10 +72,100 @@ func spawn(scene: PackedScene, sq: Vector2i) -> void:
 	var piece: Node3D = scene.instantiate()
 	pieces_root.add_child(piece)
 
-	var pos = BoardUtilities.square_to_world_center(sq)
+	var pos = BoardState.square_to_world_center(sq)
 	piece.global_position = pos
 
-	board[sq.x][sq.y] = piece
+	BoardState.board[sq.x][sq.y] = piece
+
+func try_move(piece_node: Node3D, move: Move) -> bool:
+	if not BoardState.in_bounds(move.from) or not BoardState.in_bounds(move.to): return false
+
+	var piece := piece_node as Piece
+	if piece == null: return false
+	if BoardState.piece_at(move.from) != piece: return false
+
+	# Find the direction of the piece
+	var dir := 1 if piece.color == Piece.PieceColor.WHITE else -1
+
+	# Get the textbook moves
+	var selected = get_movement(piece, move)
+	if selected == null: return false
+	
+	# Try to capture pawn at the target
+	try_capture(selected, dir)
+	
+	# Update board
+	BoardState.board[move.from.x][move.from.y] = null
+	BoardState.board[move.to.x][move.to.y] = piece
+
+	# CHeck for castling move
+	check_castle(move)
+
+	# Snap to grid
+	var pos := BoardState.square_to_world_center(move.to)
+	pos.y = BoardState.pieces_origin.y
+	piece.global_position = pos
+	
+	# Check for en passant
+	check_en_passant(piece, selected, dir)
+
+	# Set the has moved flag
+	piece.has_moved = true;
+
+	return true
+
+## Check is the requested movement is valid
+## [param piece]: The target piece
+## [param move]: The requested move
+## Returns: The movement that satisfy the request in success or null in fail
+func get_movement(piece: Piece, move: Move) -> Variant:
+	# Get all avaliable moves from the starting pos
+	var moves := BoardLogic.textbook_moves(piece, move.from)
+	
+	# Get the move that satisfy the request
+	var selected: Move = null
+	for m in moves:
+		if m.to == move.to:
+			selected = m
+			break
+			
+	return selected
+
+## Try to capture a piece
+## [param move]: The move that is selected by the user
+## [param dir]: The movement direction (Matters for pawns)
+func try_capture(move: Move, dir: int):
+	# Check if its en passant capture
+	if move.is_en_passant:
+		var captured_sq := Vector2i(move.to.x, move.to.y - dir)
+		var captured_piece: Piece = BoardState.board[captured_sq.x][captured_sq.y]
+		if captured_piece != null:
+			captured_piece.queue_free()
+			
+		BoardState.board[captured_sq.x][captured_sq.y] = null
+	
+	# Normal capture
+	var captured := BoardState.piece_at(move.to)
+	if captured != null:
+		captured.queue_free()
+
+## Check if the movement creates an en passant possibility
+## [param piece]: The moved piece
+## [param move]: The target movement
+## [param dir]: The direction of the movement
+func check_en_passant(piece: Piece, move: Move, dir: int):
+	# Reset en passant memory
+	BoardState.en_passant = null
+	# Mark the tile as en passan in case the pawn moved twice
+	if piece.type == Piece.PieceType.PAWN and abs(move.to.y - move.from.y) == 2:
+		BoardState.en_passant = Vector2i(move.from.x, move.from.y + dir)
+
+func check_castle(move: Move):
+	if move.is_castle:
+		if move.to.x == 6: # king-side
+			BoardState.move_piece(Vector2i(7, move.from.y), Vector2i(5, move.from.y))
+		elif move.to.x == 2: # queen-side
+			BoardState.move_piece(Vector2i(0, move.from.y), Vector2i(3, move.from.y))
 
 # Clears the board
 func clear_pieces() -> void:

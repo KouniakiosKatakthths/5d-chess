@@ -1,4 +1,8 @@
+class_name CameraScript
 extends CharacterBody3D
+
+# Ref to chessboard to be passed down to the drag_drop
+@export var chessboard: ChessBoard;
 
 # Get the camera 
 @onready var camera: Camera3D = $Camera3D
