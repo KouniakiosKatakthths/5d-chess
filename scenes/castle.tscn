@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://wt6ph45epxv7"]
+
+[ext_resource type="PackedScene" uid="uid://5g2r6va5tia3" path="res://prefabs/board.tscn" id="1_bly62"]
+
+[node name="Castle" type="Node3D"]
+
+[node name="board" parent="." instance=ExtResource("1_bly62")]
+game_fen = "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/2N1BN2/PPPQ1PPP/R3K2R w KQkq - 4 8"

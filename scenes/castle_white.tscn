@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dk085uk2gxi7o"]
+
+[ext_resource type="PackedScene" uid="uid://5g2r6va5tia3" path="res://prefabs/board.tscn" id="1_24r4k"]
+
+[node name="CastleWhite" type="Node3D"]
+
+[node name="board" parent="." instance=ExtResource("1_24r4k")]
+game_fen = "r3k2r/ppp1pppp/8/3p4/8/8/PPP1PPPP/R3K2R w Kkq - 0 6"

@@ -1,49 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://dfh5xaucagget"]
+[gd_scene load_steps=3 format=3 uid="uid://dfh5xaucagget"]
 
-[ext_resource type="PackedScene" uid="uid://du2p70e87xphc" path="res://prefabs/chessboard.tscn" id="1_o5qli"]
-[ext_resource type="PackedScene" uid="uid://dkuxddbwfokam" path="res://prefabs/camera.tscn" id="2_0wfyh"]
-[ext_resource type="PackedScene" uid="uid://cchpw4wk5edat" path="res://prefabs/tile_highlight.tscn" id="3_sugp2"]
-[ext_resource type="PackedScene" uid="uid://bivixevvs0wmw" path="res://prefabs/tile_capture.tscn" id="4_jyhfs"]
+[ext_resource type="PackedScene" uid="uid://5g2r6va5tia3" path="res://prefabs/board.tscn" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://dykfnp2ud7256" path="res://scripts/board.gd" id="2_0wfyh"]
 
 [node name="Main" type="Node3D"]
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.37535873, -0.40544444, -0.8334991, 0.923346, 0.085119195, 0.37441537, -0.08085784, -0.9101481, 0.40631565, 0, 3.118094, 4.5472436)
-
-[node name="Camera" parent="." node_paths=PackedStringArray("chessboard", "white_point_path", "black_point_path", "free_cam_checkbox") instance=ExtResource("2_0wfyh")]
-transform = Transform3D(-1, 6.6969726e-08, -5.6194278e-08, 0, 0.6427876, 0.7660444, 8.742278e-08, 0.7660444, -0.6427876, 0, 1.6, -1.4)
-chessboard = NodePath("../Chessboard")
-white_point_path = NodePath("../WhiteCameraSide")
-black_point_path = NodePath("../BlackCameraSize")
-free_cam_checkbox = NodePath("../Panel/CheckBox")
-
-[node name="Chessboard" parent="." instance=ExtResource("1_o5qli")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08893727, 0)
-fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-tile_highlight = ExtResource("3_sugp2")
-tile_capture = ExtResource("4_jyhfs")
-
-[node name="WhiteCameraSide" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.4)
-
-[node name="BlackCameraSize" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 1.4)
-
-[node name="Panel" type="Panel" parent="."]
-offset_right = 153.0
-offset_bottom = 35.0
-
-[node name="Label" type="Label" parent="Panel"]
-layout_mode = 0
-offset_left = 7.0
-offset_top = 5.0
-offset_right = 106.0
-offset_bottom = 28.0
-text = "Free Camera"
-
-[node name="CheckBox" type="CheckBox" parent="Panel"]
-layout_mode = 0
-offset_left = 118.0
-offset_top = 4.0
-offset_right = 142.0
-offset_bottom = 28.0
+[node name="board" parent="." instance=ExtResource("1_o5qli")]
+script = ExtResource("2_0wfyh")
+game_fen = "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3"

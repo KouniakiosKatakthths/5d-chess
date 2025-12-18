@@ -1,0 +1,55 @@
+[gd_scene load_steps=7 format=3 uid="uid://5g2r6va5tia3"]
+
+[ext_resource type="Script" uid="uid://dykfnp2ud7256" path="res://scripts/board.gd" id="1_7pl67"]
+[ext_resource type="PackedScene" uid="uid://dkuxddbwfokam" path="res://prefabs/camera.tscn" id="1_78k48"]
+[ext_resource type="PackedScene" uid="uid://du2p70e87xphc" path="res://prefabs/chessboard.tscn" id="2_7pl67"]
+[ext_resource type="PackedScene" uid="uid://cchpw4wk5edat" path="res://prefabs/tile_highlight.tscn" id="3_5lc7g"]
+[ext_resource type="PackedScene" uid="uid://bivixevvs0wmw" path="res://prefabs/tile_capture.tscn" id="4_abwl8"]
+[ext_resource type="PackedScene" uid="uid://0nd00wv4brjx" path="res://prefabs/ui/win_window.tscn" id="6_5lc7g"]
+
+[node name="board" type="Node3D"]
+script = ExtResource("1_7pl67")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.37535876, -0.40544444, -0.833499, 0.92334604, 0.08511923, 0.3744154, -0.08085785, -0.9101481, 0.40631574, 0, 3.118094, 4.5472436)
+
+[node name="Camera" parent="." node_paths=PackedStringArray("chessboard", "white_point_path", "black_point_path", "free_cam_checkbox") instance=ExtResource("1_78k48")]
+transform = Transform3D(-1, 6.6969726e-08, -5.6194278e-08, 0, 0.6427876, 0.7660444, 8.742278e-08, 0.7660444, -0.6427876, 0, 1.6, -1.4)
+chessboard = NodePath("../Chessboard")
+white_point_path = NodePath("../WhiteCameraSide")
+black_point_path = NodePath("../BlackCameraSize")
+free_cam_checkbox = NodePath("../Panel/CheckBox")
+
+[node name="Chessboard" parent="." node_paths=PackedStringArray("board") instance=ExtResource("2_7pl67")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08893727, 0)
+board = NodePath("..")
+tile_highlight = ExtResource("3_5lc7g")
+tile_capture = ExtResource("4_abwl8")
+
+[node name="WhiteCameraSide" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -1.4)
+
+[node name="BlackCameraSize" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 1.4)
+
+[node name="Panel" type="Panel" parent="."]
+offset_right = 153.0
+offset_bottom = 35.0
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = 106.0
+offset_bottom = 28.0
+text = "Free Camera"
+
+[node name="CheckBox" type="CheckBox" parent="Panel"]
+layout_mode = 0
+offset_left = 118.0
+offset_top = 4.0
+offset_right = 142.0
+offset_bottom = 28.0
+
+[node name="win_window" parent="." node_paths=PackedStringArray("chessboard") instance=ExtResource("6_5lc7g")]
+chessboard = NodePath("../Chessboard")

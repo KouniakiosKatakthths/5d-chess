@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6p0u4mkknu2v"]
+
+[ext_resource type="PackedScene" uid="uid://5g2r6va5tia3" path="res://prefabs/board.tscn" id="1_gtnh2"]
+
+[node name="Stalemate" type="Node3D"]
+
+[node name="board" parent="." instance=ExtResource("1_gtnh2")]
+game_fen = "7k/5Q2/6K1/8/8/8/8/8 b - - 0 1"

@@ -7,7 +7,7 @@ extends Node3D
 # When the sides change
 signal turn_changed(side_to_move: Piece.PieceColor)
 
-@export var fen_string: String
+@export var board: Board;
 
 # The white pieces prefabs
 @export_group("White Pieces")
@@ -44,7 +44,7 @@ var board_cache: Array;
 var piece_moved_cache: bool
 
 func _ready() -> void:
-	game_from_fen(fen_string)
+	game_from_fen(board.game_fen)
 
 # Parses a FEN string to create a game
 func game_from_fen(fen: String) -> void:

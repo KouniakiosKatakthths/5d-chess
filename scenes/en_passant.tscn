@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbv3ii7ejw4bo"]
+
+[ext_resource type="PackedScene" uid="uid://5g2r6va5tia3" path="res://prefabs/board.tscn" id="1_si3b8"]
+
+[node name="EnPassant" type="Node3D"]
+
+[node name="board" parent="." instance=ExtResource("1_si3b8")]
+game_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
