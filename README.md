@@ -8,7 +8,7 @@ There are multiple sceenes that show a lot of the functionality like en passant 
 ### Free Camera
 The user is free to navigate the whole of the chessboard with the free-camera feature. A classic camera "side to side" view is still available but is augmented with a free camera that can be activated with by holding down the right mouse button.
 
-#### The navigation in the free camera is​
+### The navigation in the free camera is​
 
 * **WASD**: For navigation around the space​
 * **Q,E**: For Down and Up movement​
@@ -17,7 +17,7 @@ The user is free to navigate the whole of the chessboard with the free-camera fe
 #### Use of the FEN strings
 The project makes use of FEN strings and provides a FEN string parser to serialize the chessboard
 
-#### Future Ideas
+## Future Ideas
 Add a saving and loading mechanism for the chessboard using the FEN strings. 
 
 Fix the weird automatic camera movement.
