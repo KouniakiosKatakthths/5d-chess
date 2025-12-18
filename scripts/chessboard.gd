@@ -39,9 +39,11 @@ func game_from_fen(fen: String) -> void:
 		push_error("Invalid FEN: expected 8 ranks")
 		return
 	
-	for y in range(0, 8):
+	for fen_row in range(8):
+		var y := 7 - fen_row
+		
 		# Get the row string
-		var row := rows[y]
+		var row := rows[fen_row]
 		
 		var x := 0;
 		# For every character in the row
@@ -98,8 +100,8 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	BoardState.board[move.from.x][move.from.y] = null
 	BoardState.board[move.to.x][move.to.y] = piece
 
-	# CHeck for castling move
-	check_castle(move)
+	# Check for castling move
+	check_castle(selected)
 
 	# Snap to grid
 	var pos := BoardState.square_to_world_center(move.to)
@@ -111,6 +113,9 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 
 	# Set the has moved flag
 	piece.has_moved = true;
+	
+	# Update the castling rights
+	update_castling_rights(piece, move.from)
 
 	return true
 
@@ -128,7 +133,7 @@ func get_movement(piece: Piece, move: Move) -> Variant:
 		if m.to == move.to:
 			selected = m
 			break
-			
+
 	return selected
 
 ## Try to capture a piece
@@ -166,6 +171,26 @@ func check_castle(move: Move):
 			BoardState.move_piece(Vector2i(7, move.from.y), Vector2i(5, move.from.y))
 		elif move.to.x == 2: # queen-side
 			BoardState.move_piece(Vector2i(0, move.from.y), Vector2i(3, move.from.y))
+
+## If the king or the rook was moved remove the castling rights
+## [param piece]: The king or rook piece
+## [param from]: Rook old location
+func update_castling_rights(piece: Piece, from: Vector2i) -> void:
+	if piece.type == Piece.PieceType.KING:
+		if piece.color == Piece.PieceColor.WHITE:
+			BoardState.can_castle_wk = false
+			BoardState.can_castle_wq = false
+		else:
+			BoardState.can_castle_bk = false
+			BoardState.can_castle_bq = false
+
+	if piece.type == Piece.PieceType.ROOK:
+		if piece.color == Piece.PieceColor.WHITE:
+			if from == Vector2i(0,0): BoardState.can_castle_wq = false
+			if from == Vector2i(7,0): BoardState.can_castle_wk = false
+		else:
+			if from == Vector2i(0,7): BoardState.can_castle_bq = false
+			if from == Vector2i(7,7): BoardState.can_castle_bk = false
 
 # Clears the board
 func clear_pieces() -> void:

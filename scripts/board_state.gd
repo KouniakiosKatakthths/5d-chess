@@ -25,7 +25,7 @@ var fullmove_number := 1
 var board := []
 
 # The FEN string for a classic game
-var default_game := "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr"
+var default_game := "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
 ## Checks if the requested coords are inside the chessboard [br]
 ## [param sq]: The request coords [br]
@@ -94,3 +94,6 @@ func world_to_square_center(world: Vector3) -> Vector2i:
 		round((world.x - pieces_origin.x) / tile_size - (tile_size / 2)),
 		round((world.z - pieces_origin.z) / tile_size - (tile_size / 2))
 	)
+
+func opposite(c: Piece.PieceColor) -> Piece.PieceColor:
+	return Piece.PieceColor.BLACK if c == Piece.PieceColor.WHITE else Piece.PieceColor.WHITE

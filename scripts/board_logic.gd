@@ -2,7 +2,7 @@ extends Node
 
 ## Holds Lamdas that build the avalable "textbook" positions of each piece
 var movement_matrix := {}
-
+## Holds lamdas that calculate if a tile can be attached from a piece
 var attacking_matrix := {}
 
 func _ready() -> void:
@@ -62,6 +62,41 @@ func _ready() -> void:
 						
 						moves.append(move)
 			
+			# Castling check
+			if not piece.has_moved:
+				var y := from.y
+				var enemy := BoardState.opposite(piece.color)
+				
+				# King cannot castle out of a check
+				if not is_square_attacked(from, enemy):
+					# Check if the king can perfrom a king-side slide
+					var can_k := (piece.color == Piece.PieceColor.WHITE and BoardState.can_castle_wk) \
+				 			or (piece.color == Piece.PieceColor.BLACK and BoardState.can_castle_bk)
+					if can_k:
+						# Squares between must be empty
+						if BoardState.is_empty(Vector2i(5,y)) and BoardState.is_empty(Vector2i(6,y)):
+							# Squares king crosses must not be attacked
+							if not is_square_attacked(Vector2i(5,y), enemy) and not is_square_attacked(Vector2i(6,y), enemy):
+								var m := Move.new()
+								m.from = from
+								m.to = Vector2i(6,y)
+								m.is_castle = true
+								moves.append(m)
+					
+					# Check if the king can perfrom a queen-side slide
+					var can_q := (piece.color == Piece.PieceColor.WHITE and BoardState.can_castle_wq) \
+				 				or (piece.color == Piece.PieceColor.BLACK and BoardState.can_castle_bq)
+					if can_q:
+						# Squares between must be empty
+						if BoardState.is_empty(Vector2i(1,y)) and BoardState.is_empty(Vector2i(2,y)) and BoardState.is_empty(Vector2i(3,y)):
+							# Squares king crosses must not be attacked
+							if not is_square_attacked(Vector2i(3,y), enemy) and not is_square_attacked(Vector2i(2,y), enemy):
+								var m2 := Move.new()
+								m2.from = from
+								m2.to = Vector2i(2,y)
+								m2.is_castle = true
+								moves.append(m2)
+			
 			return moves,
 		
 		# Pawn moves one up or captures up left/right
@@ -118,6 +153,48 @@ func _ready() -> void:
 					
 			return moves,
 	}
+	attacking_matrix = {
+		# Pawn can attack forward and left/right
+		Piece.PieceType.PAWN: func(piece: Piece, from: Vector2i, to: Vector2i) -> bool:
+			var dir := 1 if piece.color == Piece.PieceColor.WHITE else -1
+			return to == from + Vector2i(-1, dir) or to == from + Vector2i(1, dir),
+		
+		# Knight can attack 2 forward, backward, left, right and 1 forward, backward, left, right
+		Piece.PieceType.KNIGHT: func(_piece: Piece, from: Vector2i, to: Vector2i) -> bool:
+			for d in [Vector2i(1,2),Vector2i(2,1),Vector2i(2,-1),Vector2i(1,-2),
+					  Vector2i(-1,-2),Vector2i(-2,-1),Vector2i(-2,1),Vector2i(-1,2)]:
+				if from + d == to: return true
+			return false,
+		
+		# King can attack in an area around him
+		Piece.PieceType.KING: func(_piece: Piece, from: Vector2i, to: Vector2i) -> bool:
+			return abs(to.x - from.x) <= 1 and abs(to.y - from.y) <= 1,
+		
+		# Rook can attack forwards, backwords, left, right
+		Piece.PieceType.ROOK: func(_piece: Piece, from: Vector2i, to: Vector2i) -> bool:
+			for d in [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]:
+				if slide_attacks(from, to, d):
+					return true
+				
+			return false,
+		
+		# Bishop can attack sideways
+		Piece.PieceType.BISHOP: func(_piece: Piece, from: Vector2i, to: Vector2i) -> bool:
+			for d in [Vector2i(1,1),Vector2i(1,-1),Vector2i(-1,1),Vector2i(-1,-1)]:
+				if slide_attacks(from, to, d):
+					return true
+				
+			return false,
+		
+		# Queen can attack forwards, backwards, left, right and sideways
+		Piece.PieceType.QUEEN: func(_piece: Piece, from: Vector2i, to: Vector2i) -> bool:
+			for d in [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1),
+				   Vector2i(1,1),Vector2i(1,-1),Vector2i(-1,1),Vector2i(-1,-1)]:
+				if slide_attacks(from, to, d):
+					return true
+				
+			return false,
+	}
 
 ## Gets a piece and its position on the chessboard and calculates all the textbook valid positons [br]
 ## [param piece]: The desired piece [br]
@@ -135,9 +212,9 @@ func textbook_moves(piece: Piece, from: Vector2i) -> Array[Move]:
 	return fn.call(piece, from)
 
 ## Calculate all the avaliable movements for "slide" that can slide accross the chessboard [br]
-## [param piece]: The desired piece
-## [param from]: Starting position in grid coords
-## [param dir]: The target direction
+## [param piece]: The desired piece [br]
+## [param from]: Starting position in grid coords [br]
+## [param dir]: The target direction [br]
 ## [param out]: Array of the valid locations 
 func slide_movement(piece: Piece, from: Vector2i, dir: Vector2i, out: Array[Move]):
 	# First step
@@ -173,47 +250,34 @@ func find_king_square(color: Piece.PieceColor) -> Vector2i:
 				return Vector2i(x,y)
 	return Vector2i(-1,-1)
 
+## Checks if a tile can be attacked by a certen piece [br]
+## [param target]: The target tile [br]
+## [param by_color]: Spesify color [br]
+## Return: True if the tile can be attacked, false otherwise
 func is_square_attacked(target: Vector2i, by_color: Piece.PieceColor) -> bool:
 	for x in range(8):
 		for y in range(8):
+			# Get the piece at the position
 			var p: Piece = BoardState.board[x][y]
-			if p == null or p.color != by_color:
-				continue
-			if piece_attacks_square(p, Vector2i(x,y), target):
-				return true
+			if p == null or p.color != by_color: continue
+			
+			# if its enemy piece get its attack function
+			var attack_fn = attacking_matrix.get(p, null)
+			if attack_fn == null: continue;
+			
+			# If the selected piece can attack return true
+			if attack_fn.call(p, Vector2i(x, y), target): return true;
+			
 	return false
 
-func piece_attacks_square(p: Piece, from: Vector2i, target: Vector2i) -> bool:
-	match p.type:
-		Piece.PieceType.PAWN:
-			var dir := 1 if p.color == Piece.PieceColor.WHITE else -1
-			return target == from + Vector2i(-1, dir) or target == from + Vector2i(1, dir)
-
-		Piece.PieceType.KNIGHT:
-			for d in [Vector2i(1,2),Vector2i(2,1),Vector2i(2,-1),Vector2i(1,-2),
-					  Vector2i(-1,-2),Vector2i(-2,-1),Vector2i(-2,1),Vector2i(-1,2)]:
-				if from + d == target: return true
-			return false
-
-		Piece.PieceType.KING:
-			return abs(target.x - from.x) <= 1 and abs(target.y - from.y) <= 1
-
-		Piece.PieceType.ROOK:
-			return _ray_attacks(from, target, [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)])
-
-		Piece.PieceType.BISHOP:
-			return _ray_attacks(from, target, [Vector2i(1,1),Vector2i(1,-1),Vector2i(-1,1),Vector2i(-1,-1)])
-
-		Piece.PieceType.QUEEN:
-			return _ray_attacks(from, target, [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1),
-											   Vector2i(1,1),Vector2i(1,-1),Vector2i(-1,1),Vector2i(-1,-1)])
-	return false
-
-func _ray_attacks(from: Vector2i, target: Vector2i, dirs: Array[Vector2i]) -> bool:
-	for d in dirs:
-		var sq := from + d
-		while BoardState.in_bounds(sq):
-			if sq == target: return true
-			if not BoardState.is_empty(sq): break
-			sq += d
+## Calculate if a piece can attack a tile for a direction [br]
+## [param from]: The starting tile [br]
+## [param target]: The target tile [br]
+## [param dir]: The direction of the piece
+func slide_attacks(from: Vector2i, target: Vector2i, dir: Vector2i) -> bool:
+	var sq := from + dir
+	while BoardState.in_bounds(sq):
+		if sq == target: return true
+		if not BoardState.is_empty(sq): break
+		sq += dir
 	return false
