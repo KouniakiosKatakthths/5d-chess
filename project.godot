@@ -11,9 +11,9 @@ config_version=5
 [application]
 
 config/name="5D_Chess"
-run/main_scene="uid://dk085uk2gxi7o"
+run/main_scene="uid://dfh5xaucagget"
 config/features=PackedStringArray("4.5", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="uid://6phm6a2oqdx4"
 
 [autoload]
 
