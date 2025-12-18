@@ -3,7 +3,7 @@ A fully playable 3D chess game built with Godot 4, featuring complete rule enfor
 
 There are multiple sceenes that show a lot of the functionality like en passant and castling.
 
-![Chess board image](/board_overview.png.png "Screenshot of the chess board using the free camera")
+![Chess board image](/board_overview.png "Screenshot of the chess board using the free camera")
 
 ### Free Camera
 The user is free to navigate the whole of the chessboard with the free-camera feature. A classic camera "side to side" view is still available but is augmented with a free camera that can be activated with by holding down the right mouse button.
