@@ -22,6 +22,11 @@ extends Node3D
 @export var black_queen: PackedScene
 @export var black_king: PackedScene
 
+# Temp variable for holding gamestate
+var state_cache: State;
+var board_cache: Array;
+var piece_moved_cache: bool
+
 func _ready() -> void:
 	game_from_fen(BoardState.default_game)
 
@@ -86,6 +91,10 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	if piece == null: return false
 	if BoardState.piece_at(move.from) != piece: return false
 
+	# Save the current state
+	state_cache = BoardState.game_state.duplicate();
+	board_cache = BoardState.board.duplicate(true)
+
 	# Find the direction of the piece
 	var dir := 1 if piece.color == Piece.PieceColor.WHITE else -1
 
@@ -112,10 +121,19 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	check_en_passant(piece, selected, dir)
 
 	# Set the has moved flag
+	piece_moved_cache = piece.has_moved
 	piece.has_moved = true;
 	
 	# Update the castling rights
 	update_castling_rights(piece, move.from)
+
+	var king_sq := BoardLogic.find_king_square(piece.color)
+		
+	if BoardLogic.is_square_attacked(king_sq, BoardState.opposite(piece.color)):
+		BoardState.game_state = state_cache
+		BoardState.board = board_cache
+		piece.has_moved = piece_moved_cache;
+		return false
 
 	return true
 
@@ -160,10 +178,10 @@ func try_capture(move: Move, dir: int):
 ## [param dir]: The direction of the movement
 func check_en_passant(piece: Piece, move: Move, dir: int):
 	# Reset en passant memory
-	BoardState.en_passant = null
+	BoardState.game_state.en_passant = null
 	# Mark the tile as en passan in case the pawn moved twice
 	if piece.type == Piece.PieceType.PAWN and abs(move.to.y - move.from.y) == 2:
-		BoardState.en_passant = Vector2i(move.from.x, move.from.y + dir)
+		BoardState.game_state.en_passant = Vector2i(move.from.x, move.from.y + dir)
 
 func check_castle(move: Move):
 	if move.is_castle:
@@ -178,19 +196,19 @@ func check_castle(move: Move):
 func update_castling_rights(piece: Piece, from: Vector2i) -> void:
 	if piece.type == Piece.PieceType.KING:
 		if piece.color == Piece.PieceColor.WHITE:
-			BoardState.can_castle_wk = false
-			BoardState.can_castle_wq = false
+			BoardState.game_state.can_castle_wk = false
+			BoardState.game_state.can_castle_wq = false
 		else:
-			BoardState.can_castle_bk = false
-			BoardState.can_castle_bq = false
+			BoardState.game_state.can_castle_bk = false
+			BoardState.game_state.can_castle_bq = false
 
 	if piece.type == Piece.PieceType.ROOK:
 		if piece.color == Piece.PieceColor.WHITE:
-			if from == Vector2i(0,0): BoardState.can_castle_wq = false
-			if from == Vector2i(7,0): BoardState.can_castle_wk = false
+			if from == Vector2i(0,0): BoardState.game_state.can_castle_wq = false
+			if from == Vector2i(7,0): BoardState.game_state.can_castle_wk = false
 		else:
-			if from == Vector2i(0,7): BoardState.can_castle_bq = false
-			if from == Vector2i(7,7): BoardState.can_castle_bk = false
+			if from == Vector2i(0,7): BoardState.game_state.can_castle_bq = false
+			if from == Vector2i(7,7): BoardState.game_state.can_castle_bk = false
 
 # Clears the board
 func clear_pieces() -> void:

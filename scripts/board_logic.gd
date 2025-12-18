@@ -70,8 +70,8 @@ func _ready() -> void:
 				# King cannot castle out of a check
 				if not is_square_attacked(from, enemy):
 					# Check if the king can perfrom a king-side slide
-					var can_k := (piece.color == Piece.PieceColor.WHITE and BoardState.can_castle_wk) \
-				 			or (piece.color == Piece.PieceColor.BLACK and BoardState.can_castle_bk)
+					var can_k := (piece.color == Piece.PieceColor.WHITE and BoardState.game_state.can_castle_wk) \
+				 			or (piece.color == Piece.PieceColor.BLACK and BoardState.game_state.can_castle_bk)
 					if can_k:
 						# Squares between must be empty
 						if BoardState.is_empty(Vector2i(5,y)) and BoardState.is_empty(Vector2i(6,y)):
@@ -84,8 +84,8 @@ func _ready() -> void:
 								moves.append(m)
 					
 					# Check if the king can perfrom a queen-side slide
-					var can_q := (piece.color == Piece.PieceColor.WHITE and BoardState.can_castle_wq) \
-				 				or (piece.color == Piece.PieceColor.BLACK and BoardState.can_castle_bq)
+					var can_q := (piece.color == Piece.PieceColor.WHITE and BoardState.game_state.can_castle_wq) \
+				 				or (piece.color == Piece.PieceColor.BLACK and BoardState.game_state.can_castle_bq)
 					if can_q:
 						# Squares between must be empty
 						if BoardState.is_empty(Vector2i(1,y)) and BoardState.is_empty(Vector2i(2,y)) and BoardState.is_empty(Vector2i(3,y)):
@@ -130,10 +130,10 @@ func _ready() -> void:
 				moves.append(move)
 			
 			# En passant capture move
-			if BoardState.en_passant != null:
+			if BoardState.game_state.en_passant != null:
 				for dx in [-1, 1]:
 					var ep_to := from + Vector2i(dx, dir)
-					if ep_to == BoardState.en_passant:
+					if ep_to == BoardState.game_state.en_passant:
 						var move := Move.new()
 						move.from = from
 						move.to = ep_to
@@ -262,7 +262,7 @@ func is_square_attacked(target: Vector2i, by_color: Piece.PieceColor) -> bool:
 			if p == null or p.color != by_color: continue
 			
 			# if its enemy piece get its attack function
-			var attack_fn = attacking_matrix.get(p, null)
+			var attack_fn = attacking_matrix.get(p.type, null)
 			if attack_fn == null: continue;
 			
 			# If the selected piece can attack return true
@@ -281,3 +281,11 @@ func slide_attacks(from: Vector2i, target: Vector2i, dir: Vector2i) -> bool:
 		if not BoardState.is_empty(sq): break
 		sq += dir
 	return false
+
+## Checks if the king is in check
+## [param color]: The target color king
+func is_in_check(color: Piece.PieceColor) -> bool:
+	var king_sq := find_king_square(color)
+	if king_sq.x == -1:
+		return false # or push_error
+	return is_square_attacked(king_sq, BoardState.opposite(color))
