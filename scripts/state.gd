@@ -11,6 +11,7 @@ func clone() -> State:
 	s.en_passant = en_passant # Vector2i is value-type, ok
 	s.halfmove_clock = halfmove_clock
 	s.fullmove_number = fullmove_number
+	s.game_finished = game_finished
 	return s
 
 # Current side to play
@@ -21,6 +22,8 @@ var can_castle_wk := true
 var can_castle_wq := true
 var can_castle_bk := true
 var can_castle_bq := true
+
+var game_finished := false
 
 # En passant target square (the square a pawn could capture into), or null
 var en_passant: Variant = null

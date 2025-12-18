@@ -19,6 +19,7 @@ free_cam_checkbox = NodePath("../Panel/CheckBox")
 
 [node name="Chessboard" parent="." instance=ExtResource("1_o5qli")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08893727, 0)
+fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 tile_highlight = ExtResource("3_sugp2")
 tile_capture = ExtResource("4_jyhfs")
 

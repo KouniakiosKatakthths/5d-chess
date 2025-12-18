@@ -167,3 +167,59 @@ func evaluate_game_result() -> GameResult:
 		return GameResult.STALEMATE
 
 	return GameResult.ONGOING
+
+func algebraic_to_square(s: String) -> Vector2i:
+	if s.length() != 2:
+		return Vector2i(-1, -1)
+
+	var file := s[0].to_lower()
+	var rank := s[1]
+
+	var x := int(file.unicode_at(0) - "a".unicode_at(0))
+	if x < 0 or x > 7:
+		return Vector2i(-1, -1)
+
+	if not rank.is_valid_int():
+		return Vector2i(-1, -1)
+
+	var r := int(rank)
+	if r < 1 or r > 8:
+		return Vector2i(-1, -1)
+
+	var y := r - 1
+	return Vector2i(x, y)
+
+
+func _sync_has_moved_from_fen() -> void:
+	# Default: assume moved (safe)
+	for x in range(8):
+		for y in range(8):
+			var p: Piece = BoardState.board[x][y]
+			if p:
+				p.has_moved = true
+
+	# Kings: if any castling right exists for that color, king has not moved
+	var w_king := BoardState.piece_at(Vector2i(4,0))
+	if w_king and w_king.type == Piece.PieceType.KING and w_king.color == Piece.PieceColor.WHITE:
+		w_king.has_moved = not (BoardState.game_state.can_castle_wk or BoardState.game_state.can_castle_wq)
+
+	var b_king := BoardState.piece_at(Vector2i(4,7))
+	if b_king and b_king.type == Piece.PieceType.KING and b_king.color == Piece.PieceColor.BLACK:
+		b_king.has_moved = not (BoardState.game_state.can_castle_bk or BoardState.game_state.can_castle_bq)
+
+	# Rooks: if the matching castling right exists, that rook hasn't moved
+	var w_rook_a := BoardState.piece_at(Vector2i(0,0))
+	if w_rook_a and w_rook_a.type == Piece.PieceType.ROOK and w_rook_a.color == Piece.PieceColor.WHITE:
+		w_rook_a.has_moved = not BoardState.game_state.can_castle_wq
+
+	var w_rook_h := BoardState.piece_at(Vector2i(7,0))
+	if w_rook_h and w_rook_h.type == Piece.PieceType.ROOK and w_rook_h.color == Piece.PieceColor.WHITE:
+		w_rook_h.has_moved = not BoardState.game_state.can_castle_wk
+
+	var b_rook_a := BoardState.piece_at(Vector2i(0,7))
+	if b_rook_a and b_rook_a.type == Piece.PieceType.ROOK and b_rook_a.color == Piece.PieceColor.BLACK:
+		b_rook_a.has_moved = not BoardState.game_state.can_castle_bq
+
+	var b_rook_h := BoardState.piece_at(Vector2i(7,7))
+	if b_rook_h and b_rook_h.type == Piece.PieceType.ROOK and b_rook_h.color == Piece.PieceColor.BLACK:
+		b_rook_h.has_moved = not BoardState.game_state.can_castle_bk

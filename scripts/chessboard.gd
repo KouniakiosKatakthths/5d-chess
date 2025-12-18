@@ -7,6 +7,8 @@ extends Node3D
 # When the sides change
 signal turn_changed(side_to_move: Piece.PieceColor)
 
+@export var fen_string: String
+
 # The white pieces prefabs
 @export_group("White Pieces")
 @export var white_pawn: PackedScene
@@ -32,18 +34,25 @@ signal turn_changed(side_to_move: Piece.PieceColor)
 # An array that holds all of the highlights
 var highlights: Array
 
+# Signals for game state
+signal game_over(winner: Piece.PieceColor)
+signal draw(reason: String)
+
 # Temp variable for holding gamestate
 var state_cache: State;
 var board_cache: Array;
 var piece_moved_cache: bool
 
 func _ready() -> void:
-	game_from_fen(BoardState.default_game)
+	game_from_fen(fen_string)
 
 # Parses a FEN string to create a game
 func game_from_fen(fen: String) -> void:
 	clear_pieces()
 	BoardState.init_board_array()
+	
+	# Split all the parts of the FEN string
+	var parts := fen.strip_edges().split(" ")
 
 	# Get only the piece locations from the FEN string
 	var pieces_positions := fen.strip_edges().split(" ")[0]
@@ -83,6 +92,86 @@ func game_from_fen(fen: String) -> void:
 			
 			spawn(piece, Vector2i(x, y))
 			x += 1
+			
+	# If only placement was provided
+	if parts.size() == 1:
+		return
+		
+	# Side to move
+	var stm := parts[1]
+	if stm == "w":
+		BoardState.game_state.side_to_move = Piece.PieceColor.WHITE
+	elif stm == "b":
+		BoardState.game_state.side_to_move = Piece.PieceColor.BLACK
+	else:
+		push_error("Invalid FEN: side-to-move must be 'w' or 'b'")
+		return
+		
+	if parts.size() == 2:
+		return
+		
+	# Parse castling rights
+	var castling := parts[2]
+	BoardState.game_state.can_castle_wk = false
+	BoardState.game_state.can_castle_wq = false
+	BoardState.game_state.can_castle_bk = false
+	BoardState.game_state.can_castle_bq = false
+
+	if castling != "-":
+		for ch in castling:
+			match ch:
+				"K": BoardState.game_state.can_castle_wk = true
+				"Q": BoardState.game_state.can_castle_wq = true
+				"k": BoardState.game_state.can_castle_bk = true
+				"q": BoardState.game_state.can_castle_bq = true
+				_:
+					push_error("Invalid FEN: invalid castling char: ", ch)
+					return
+					
+	# Only 3 fields
+	if parts.size() == 3:
+		return
+
+	# En passant target square
+	var ep := parts[3]
+	BoardState.game_state.en_passant = null
+	if ep != "-":
+		var ep_sq := BoardState.algebraic_to_square(ep)
+		if ep_sq.x == -1:
+			push_error("Invalid FEN: invalid en passant square: ", ep)
+			return
+		BoardState.game_state.en_passant = ep_sq
+	
+	# Halfmove clock
+	if not parts[4].is_valid_int():
+		push_error("Invalid FEN: halfmove clock not an int: ", parts[4])
+		return
+	BoardState.game_state.halfmove_clock = int(parts[4])
+
+	# If only 5 fields, stop
+	if parts.size() == 5:
+		return
+	
+	# Fullmove number
+	if not parts[5].is_valid_int():
+		push_error("Invalid FEN: fullmove number not an int: ", parts[5])
+		return
+	BoardState.game_state.fullmove_number = int(parts[5])
+
+	BoardState._sync_has_moved_from_fen()
+
+func reset_game() -> void:
+	# Reset state
+	BoardState.game_state = State.new()
+	BoardState.game_state.side_to_move = Piece.PieceColor.WHITE
+
+	BoardState.game_state.game_finished = false
+
+	# Reload starting position
+	game_from_fen(BoardState.default_game)
+
+	# Optional: tell camera/UI whose turn it is again
+	emit_signal("turn_changed", BoardState.game_state.side_to_move)
 
 # Spawn a piece to the word
 func spawn(scene: PackedScene, sq: Vector2i) -> void:
@@ -101,6 +190,10 @@ func clear_highlights() -> void:
 	highlights.clear()
 
 func try_move(piece_node: Node3D, move: Move) -> bool:
+	# Check if the game is finished
+	if BoardState.game_state.game_finished:
+		return false
+	
 	if not BoardState.in_bounds(move.from) or not BoardState.in_bounds(move.to): return false
 
 	var piece := piece_node as Piece
@@ -178,9 +271,9 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	var result := BoardState.evaluate_game_result()
 	match result:
 		BoardState.GameResult.CHECKMATE:
-			print("Checkmate! Winner:", BoardState.opposite(BoardState.game_state.side_to_move))
+			emit_signal("game_over", BoardState.opposite(BoardState.game_state.side_to_move))
 		BoardState.GameResult.STALEMATE:
-			print("Stalemate! Draw.")
+			emit_signal("draw", "Stalemate")
 		_: pass
 	
 	return true

@@ -35,6 +35,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func pick_piece(mouse_pos: Vector2) -> void:
+	# Check if the game is finished
+	if BoardState.game_state.game_finished:
+		return
+		
 	# Create raycast with target the piece layer
 	var hit := raycast(mouse_pos, LAYER_PIECE)
 	

@@ -71,39 +71,38 @@ func _ready() -> void:
 						moves.append(move)
 			
 			# Castling check
-			if not piece.has_moved:
-				var y := from.y
-				var enemy := BoardState.opposite(piece.color)
+			var y := from.y
+			var enemy := BoardState.opposite(piece.color)
+			
+			# King cannot castle out of a check
+			if not is_square_attacked(from, enemy):
+				# Check if the king can perfrom a king-side slide
+				var can_k := (piece.color == Piece.PieceColor.WHITE and BoardState.game_state.can_castle_wk) \
+			 			or (piece.color == Piece.PieceColor.BLACK and BoardState.game_state.can_castle_bk)
+				if can_k:
+					# Squares between must be empty
+					if BoardState.is_empty(Vector2i(5,y)) and BoardState.is_empty(Vector2i(6,y)):
+						# Squares king crosses must not be attacked
+						if not is_square_attacked(Vector2i(5,y), enemy) and not is_square_attacked(Vector2i(6,y), enemy):
+							var m := Move.new()
+							m.from = from
+							m.to = Vector2i(6,y)
+							m.is_castle = true
+							moves.append(m)
 				
-				# King cannot castle out of a check
-				if not is_square_attacked(from, enemy):
-					# Check if the king can perfrom a king-side slide
-					var can_k := (piece.color == Piece.PieceColor.WHITE and BoardState.game_state.can_castle_wk) \
-				 			or (piece.color == Piece.PieceColor.BLACK and BoardState.game_state.can_castle_bk)
-					if can_k:
-						# Squares between must be empty
-						if BoardState.is_empty(Vector2i(5,y)) and BoardState.is_empty(Vector2i(6,y)):
-							# Squares king crosses must not be attacked
-							if not is_square_attacked(Vector2i(5,y), enemy) and not is_square_attacked(Vector2i(6,y), enemy):
-								var m := Move.new()
-								m.from = from
-								m.to = Vector2i(6,y)
-								m.is_castle = true
-								moves.append(m)
-					
-					# Check if the king can perfrom a queen-side slide
-					var can_q := (piece.color == Piece.PieceColor.WHITE and BoardState.game_state.can_castle_wq) \
-				 				or (piece.color == Piece.PieceColor.BLACK and BoardState.game_state.can_castle_bq)
-					if can_q:
-						# Squares between must be empty
-						if BoardState.is_empty(Vector2i(1,y)) and BoardState.is_empty(Vector2i(2,y)) and BoardState.is_empty(Vector2i(3,y)):
-							# Squares king crosses must not be attacked
-							if not is_square_attacked(Vector2i(3,y), enemy) and not is_square_attacked(Vector2i(2,y), enemy):
-								var m2 := Move.new()
-								m2.from = from
-								m2.to = Vector2i(2,y)
-								m2.is_castle = true
-								moves.append(m2)
+				# Check if the king can perfrom a queen-side slide
+				var can_q := (piece.color == Piece.PieceColor.WHITE and BoardState.game_state.can_castle_wq) \
+			 				or (piece.color == Piece.PieceColor.BLACK and BoardState.game_state.can_castle_bq)
+				if can_q:
+					# Squares between must be empty
+					if BoardState.is_empty(Vector2i(1,y)) and BoardState.is_empty(Vector2i(2,y)) and BoardState.is_empty(Vector2i(3,y)):
+						# Squares king crosses must not be attacked
+						if not is_square_attacked(Vector2i(3,y), enemy) and not is_square_attacked(Vector2i(2,y), enemy):
+							var m2 := Move.new()
+							m2.from = from
+							m2.to = Vector2i(2,y)
+							m2.is_castle = true
+							moves.append(m2)
 			
 			return moves,
 		
@@ -124,12 +123,13 @@ func _ready() -> void:
 				moves.append(move)
 			
 			# Calculate the double movement in the first time
+			var start_rank := 1 if piece.color == Piece.PieceColor.WHITE else 6
 			var two := from + Vector2i(0, dir * 2)
 			if (BoardState.in_bounds(two) and 
 				BoardState.in_bounds(one) and 
 				BoardState.is_empty(one) and 
 				BoardState.is_empty(two) and 
-				not piece.has_moved):
+				from.y == start_rank):
 					
 				var move := Move.new()
 				move.from = from
