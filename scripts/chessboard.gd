@@ -90,6 +90,7 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	var piece := piece_node as Piece
 	if piece == null: return false
 	if BoardState.piece_at(move.from) != piece: return false
+	if BoardState.game_state.side_to_move != piece.color: return false
 
 	# Save the current state
 	state_cache = BoardState.game_state.duplicate();
@@ -110,7 +111,14 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 	BoardState.board[move.to.x][move.to.y] = piece
 
 	# Check for castling move
-	check_castle(selected)
+	var did_capture = check_castle(selected)
+	var is_pawn := piece.type == Piece.PieceType.PAWN
+	
+	# Incrise the halfmove counter or reset
+	if did_capture or is_pawn:
+		BoardState.game_state.halfmove_clock = 0
+	else:
+		BoardState.game_state.halfmove_clock += 1
 
 	# Snap to grid
 	var pos := BoardState.square_to_world_center(move.to)
@@ -134,7 +142,13 @@ func try_move(piece_node: Node3D, move: Move) -> bool:
 		BoardState.board = board_cache
 		piece.has_moved = piece_moved_cache;
 		return false
-
+		
+	var was_black := BoardState.game_state.side_to_move == Piece.PieceColor.BLACK
+	# Flip the board
+	BoardState.game_state.side_to_move = BoardState.opposite(BoardState.game_state.side_to_move)
+	
+	# Incrise the fullmove counter when the previus player was black
+	if was_black: BoardState.fullmove_number += 1
 	return true
 
 ## Check is the requested movement is valid
@@ -157,7 +171,8 @@ func get_movement(piece: Piece, move: Move) -> Variant:
 ## Try to capture a piece
 ## [param move]: The move that is selected by the user
 ## [param dir]: The movement direction (Matters for pawns)
-func try_capture(move: Move, dir: int):
+## Returns true if a piece was captured or false otherwise
+func try_capture(move: Move, dir: int) -> bool:
 	# Check if its en passant capture
 	if move.is_en_passant:
 		var captured_sq := Vector2i(move.to.x, move.to.y - dir)
@@ -166,11 +181,15 @@ func try_capture(move: Move, dir: int):
 			captured_piece.queue_free()
 			
 		BoardState.board[captured_sq.x][captured_sq.y] = null
+		return true
 	
 	# Normal capture
 	var captured := BoardState.piece_at(move.to)
 	if captured != null:
 		captured.queue_free()
+		return true
+	
+	return false
 
 ## Check if the movement creates an en passant possibility
 ## [param piece]: The moved piece

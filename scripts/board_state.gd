@@ -81,5 +81,8 @@ func world_to_square_center(world: Vector3) -> Vector2i:
 		round((world.z - pieces_origin.z) / tile_size - (tile_size / 2))
 	)
 
+## Get the opposite color of the given one
+## [param c]: The color that we want the opposite
+## Return: The opposite color of the [param c]
 func opposite(c: Piece.PieceColor) -> Piece.PieceColor:
 	return Piece.PieceColor.BLACK if c == Piece.PieceColor.WHITE else Piece.PieceColor.WHITE
